@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MyTasks</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a23;
+    --surface2: #22222e;
+    --surface3: #2a2a38;
+    --border: #333345;
+    --accent: #7c6af7;
+    --accent2: #a855f7;
+    --accent-glow: rgba(124,106,247,0.3);
+    --text: #f0f0f8;
+    --text2: #9090b0;
+    --text3: #606078;
+    --red: #f04a4a;
+    --green: #4af09a;
+    --yellow: #f0c44a;
+    --orange: #f0834a;
+    --blue: #4aaaf0;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* TOP BAR */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,15,19,0.92);
+    backdrop-filter: blur(16px);
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-row { display: flex; align-items: center; justify-content: space-between; }
+  .app-title { font-family: 'Prompt', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+  .app-title span { color: var(--accent); }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text2); font-size: 18px;
+    transition: all 0.15s;
+  }
+  .icon-btn:active { transform: scale(0.92); background: var(--surface3); }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex; gap: 6px; margin-top: 12px; overflow-x: auto;
+    scrollbar-width: none; -ms-overflow-style: none;
+    padding-bottom: 2px;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+    font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; border: 1px solid transparent;
+    background: var(--surface2); color: var(--text2);
+  }
+  .tab-btn.active {
+    background: var(--accent); color: white;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  /* MAIN CONTENT */
+  .main { padding: 16px 16px 100px; }
+
+  /* SECTION HEADERS */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; margin-top: 20px;
+  }
+  .section-header:first-child { margin-top: 0; }
+  .section-title {
+    font-family: 'Prompt', sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--text2); text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .section-count {
+    font-size: 12px; color: var(--text3);
+    background: var(--surface2); padding: 2px 8px; border-radius: 10px;
+  }
+
+  /* TASK CARD */
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .task-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+  .task-card.priority-high::before { background: var(--red); }
+  .task-card.priority-med::before { background: var(--yellow); }
+  .task-card.priority-low::before { background: var(--green); }
+  .task-card:active { transform: scale(0.98); background: var(--surface2); }
+  .task-card.done { opacity: 0.45; }
+  .task-card.done .task-title { text-decoration: line-through; }
+
+  .task-row { display: flex; align-items: flex-start; gap: 12px; }
+  .task-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; margin-top: 1px;
+    cursor: pointer;
+  }
+  .task-check.checked { background: var(--accent); border-color: var(--accent); }
+  .task-check.checked::after { content: '✓'; color: white; font-size: 12px; font-weight: bold; }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-title { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+  .task-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .meta-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    font-weight: 500; display: flex; align-items: center; gap: 4px;
+  }
+  .tag-time { background: rgba(74,170,240,0.15); color: var(--blue); }
+  .tag-repeat { background: rgba(124,106,247,0.15); color: var(--accent); }
+  .tag-priority-high { background: rgba(240,74,74,0.15); color: var(--red); }
+  .tag-priority-med { background: rgba(240,196,74,0.15); color: var(--yellow); }
+  .tag-priority-low { background: rgba(74,240,154,0.15); color: var(--green); }
+  .tag-subtask { background: rgba(144,144,176,0.12); color: var(--text2); }
+  .tag-alert { background: rgba(240,131,74,0.15); color: var(--orange); }
+
+  .task-desc { font-size: 12px; color: var(--text3); margin-top: 4px; line-height: 1.4; }
+
+  /* FAB */
+  .fab {
+    position: fixed; bottom: 24px; right: 50%;
+    transform: translateX(50%);
+    max-width: calc(480px - 32px);
+    width: calc(100% - 32px);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white; border: none; border-radius: 100px;
+    padding: 16px 24px; font-family: 'Prompt', sans-serif;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(124,106,247,0.4);
+    transition: all 0.15s; z-index: 90;
+  }
+  .fab:active { transform: translateX(50%) scale(0.97); }
+
+  /* MODAL OVERLAY */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 200; display: none; align-items: flex-end;
+    backdrop-filter: blur(4px);
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 480px; margin: 0 auto;
+    padding: 20px 20px 40px;
+    max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.25s ease;
+    border-top: 1px solid var(--border);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-handle {
+    width: 36px; height: 4px; background: var(--border);
+    border-radius: 2px; margin: 0 auto 20px;
+  }
+  .modal-title {
+    font-family: 'Prompt', sans-serif; font-size: 18px; font-weight: 700;
+    margin-bottom: 20px; color: var(--text);
+  }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; color: var(--text2); margin-bottom: 6px; display: block; font-weight: 500; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); font-family: 'Sarabun', sans-serif;
+    font-size: 15px; padding: 12px 14px;
+    transition: border-color 0.15s; outline: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .form-select { appearance: none; cursor: pointer; }
+  .form-textarea { resize: none; min-height: 80px; }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--text3); }
+
+  /* PRIORITY SELECT */
+  .priority-row { display: flex; gap: 8px; }
+  .priority-opt {
+    flex: 1; padding: 10px 6px; border-radius: var(--radius-sm);
+    border: 2px solid var(--border); text-align: center;
+    cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: all 0.15s; color: var(--text2);
+  }
+  .priority-opt.sel-high { border-color: var(--red); background: rgba(240,74,74,0.15); color: var(--red); }
+  .priority-opt.sel-med { border-color: var(--yellow); background: rgba(240,196,74,0.15); color: var(--yellow); }
+  .priority-opt.sel-low { border-color: var(--green); background: rgba(74,240,154,0.15); color: var(--green); }
+
+  /* TOGGLE */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+  .toggle {
+    width: 44px; height: 24px; background: var(--surface3);
+    border-radius: 12px; position: relative; cursor: pointer;
+    transition: background 0.2s; flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle::after {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: white; top: 2px; left: 2px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .toggle.on::after { left: 22px; }
+
+  /* SUBTASKS */
+  .subtask-list { margin-top: 8px; }
+  .subtask-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; background: var(--surface2);
+    border-radius: var(--radius-sm); margin-bottom: 6px;
+    border: 1px solid var(--border);
+  }
+  .subtask-item input {
+    flex: 1; background: none; border: none;
+    color: var(--text); font-size: 14px;
+    font-family: 'Sarabun', sans-serif; outline: none;
+  }
+  .subtask-del { color: var(--text3); cursor: pointer; font-size: 16px; padding: 2px; }
+  .subtask-del:active { color: var(--red); }
+  .add-subtask-btn {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--accent); font-size: 13px; font-weight: 500;
+    cursor: pointer; padding: 6px 0; margin-top: 4px;
+  }
+
+  /* BTN ROW */
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+  .btn {
+    flex: 1; padding: 14px; border-radius: var(--radius-sm);
+    font-family: 'Prompt', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+  .btn-secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn:active { transform: scale(0.97); }
+
+  /* CALENDAR VIEW */
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; margin-bottom: 16px;
+  }
+  .cal-day-name {
+    text-align: center; font-size: 11px; color: var(--text3);
+    font-weight: 600; padding: 4px 0; text-transform: uppercase;
+  }
+  .cal-day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; font-size: 13px; cursor: pointer;
+    position: relative; color: var(--text2);
+    transition: all 0.15s;
+  }
+  .cal-day:active { background: var(--surface3); }
+  .cal-day.today { background: var(--accent); color: white; font-weight: 700; }
+  .cal-day.has-task::after {
+    content: ''; position: absolute; bottom: 2px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent2);
+  }
+  .cal-day.today.has-task::after { background: white; }
+  .cal-day.other-month { color: var(--text3); opacity: 0.4; }
+  .cal-day.selected { border: 2px solid var(--accent); color: var(--accent); }
+
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .cal-month-title { font-family: 'Prompt', sans-serif; font-size: 16px; font-weight: 600; }
+  .cal-nav { color: var(--text2); font-size: 20px; cursor: pointer; padding: 4px 8px; }
+
+  /* SETTINGS VIEW */
+  .settings-section { margin-bottom: 24px; }
+  .settings-section-title {
+    font-size: 12px; color: var(--text3); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+  }
+  .settings-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+    margin-bottom: 6px; display: flex; align-items: center;
+    justify-content: space-between;
+  }
+  .settings-item-label { font-size: 15px; color: var(--text); }
+  .settings-item-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* CATEGORY CHIP EDIT */
+  .cat-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 13px; color: var(--text2); margin: 4px; cursor: pointer;
+  }
+  .cat-chip .del { color: var(--text3); font-size: 14px; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 48px 24px;
+    color: var(--text3); font-size: 14px;
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+  /* ACTIONS ROW */
+  .actions-row {
+    display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .action-btn {
+    padding: 7px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text2); display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+  }
+  .action-btn:active { transform: scale(0.96); }
+  .action-btn.danger { color: var(--red); border-color: rgba(240,74,74,0.3); }
+
+  /* DETAIL MODAL */
+  .detail-subtask {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .detail-subtask:last-child { border-bottom: none; }
+  .detail-subtask-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .detail-subtask-check.checked { background: var(--accent); border-color: var(--accent); }
+  .detail-subtask-check.checked::after { content: '✓'; color: white; font-size: 11px; }
+
+  /* SCROLL */
+  ::-webkit-scrollbar { width: 0; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .repeat-opts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .repeat-chip {
+    padding: 6px 12px; border-radius: 20px;
+    border: 1px solid var(--border); background: var(--surface2);
+    font-size: 12px; color: var(--text2); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .repeat-chip.active { border-color: var(--accent); background: rgba(124,106,247,0.15); color: var(--accent); }
+
+  .section-editable {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .edit-icon { font-size: 14px; color: var(--text3); cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="app-title">My<span>Tasks</span></div>
+    <div style="display:flex;gap:8px">
+      <div class="icon-btn" onclick="showSort()">⇅</div>
+      <div class="icon-btn" onclick="showTab('settings')">⚙</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <div class="tab-btn active" onclick="showTab('all',this)">ทั้งหมด</div>
+    <div class="tab-btn" onclick="showTab('today',this)">วันนี้</div>
+    <div class="tab-btn" onclick="showTab('calendar',this)">📅 ปฏิทิน</div>
+    <div class="tab-btn" onclick="showTab('done',this)">✓ เสร็จแล้ว</div>
+  </div>
+</div>
+
+<div class="main" id="mainContent"></div>
+
+<!-- FAB -->
+<button class="fab" onclick="openAddModal()">＋ เพิ่มงานใหม่</button>
+
+<!-- ADD/EDIT TASK MODAL -->
+<div class="overlay" id="addOverlay" onclick="closeOnOverlay(event,'addOverlay')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">เพิ่มงานใหม่</div>
+
+    <div class="form-group">
+      <label class="form-label">ชื่องาน *</label>
+      <input class="form-input" id="taskTitle" placeholder="ระบุชื่องาน..." />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">คำอธิบาย</label>
+      <textarea class="form-textarea" id="taskDesc" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">วันที่</label>
+        <input class="form-input" id="taskDate" type="date" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">เวลา</label>
+        <input class="form-input" id="taskTime" type="time" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ความสำคัญ</label>
+      <div class="priority-row">
+        <div class="priority-opt" id="p-high" onclick="selectPriority('high')">🔴 สูง</div>
+        <div class="priority-opt" id="p-med" onclick="selectPriority('med')">🟡 กลาง</div>
+        <div class="priority-opt" id="p-low" onclick="selectPriority('low')">🟢 ต่ำ</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">หมวดหมู่</label>
+      <select class="form-select" id="taskCat"></select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ประเภทการทำซ้ำ</label>
+      <div class="repeat-opts">
+        <div class="repeat-chip active" data-repeat="none" onclick="selectRepeat('none')">ไม่ซ้ำ</div>
+        <div class="repeat-chip" data-repeat="daily" onclick="selectRepeat('daily')">ทุกวัน</div>
+        <div class="repeat-chip" data-repeat="weekly" onclick="selectRepeat('weekly')">ทุกสัปดาห์</div>
+        <div class="repeat-chip" data-repeat="monthly" onclick="selectRepeat('monthly')">ทุกเดือน</div>
+        <div class="repeat-chip" data-repeat="custom" onclick="selectRepeat('custom')">กำหนดเอง</div>
+      </div>
+      <div id="customRepeatRow" style="display:none;margin-top:10px">
+        <input class="form-input" id="customRepeatDays" type="number" min="1" placeholder="ทำซ้ำทุกกี่วัน..." />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="toggle-row">
+        <div>
+          <div class="form-label" style="margin:0">แจ้งเตือน</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">แจ้งเตือนเมื่อถึงเวลางาน</div>
+        </div>
+        <div class="toggle" id="alertToggle" onclick="toggleAlert()"></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">งานย่อย</label>
+      <div class="subtask-list" id="subtaskList"></div>
+      <div class="add-subtask-btn" onclick="addSubtaskField()">＋ เพิ่มงานย่อย</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('addOverlay')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTask()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailOverlay" onclick="closeOnOverlay(event,'detailOverlay')">
+  <div class="modal" id="detailModal"></div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="overlay" id="confirmOverlay" onclick="closeOnOverlay(event,'confirmOverlay')">
+  <div class="modal" style="padding-bottom:28px">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="font-size:16px;text-align:center;margin-bottom:8px">&#9888;&#65039; ยืนยัน</div>
+    <div id="confirmMsg" style="text-align:center;color:var(--text2);font-size:15px;margin-bottom:24px;white-space:pre-line;line-height:1.6"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">ยกเลิก</button>
+      <button class="btn btn-primary" id="confirmYes" style="background:var(--red);box-shadow:none">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- SORT MODAL -->
+<div class="overlay" id="sortOverlay" onclick="closeOnOverlay(event,'sortOverlay')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">เรียงลำดับงาน</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="settings-item" onclick="setSortAndClose('time')" style="cursor:pointer">
+        <span class="settings-item-label">⏰ ตามเวลา</span>
+        <span id="sort-check-time" style="color:var(--accent)"></span>
+      </div>
+      <div class="settings-item" onclick="setSortAndClose('priority')" style="cursor:pointer">
+        <span class="settings-item-label">🔴 ตามความสำคัญ</span>
+        <span id="sort-check-priority" style="color:var(--accent)"></span>
+      </div>
+      <div class="settings-item" onclick="setSortAndClose('name')" style="cursor:pointer">
+        <span class="settings-item-label">🔤 ตามชื่อ</span>
+        <span id="sort-check-name" style="color:var(--accent)"></span>
+      </div>
+      <div class="settings-item" onclick="setSortAndClose('created')" style="cursor:pointer">
+        <span class="settings-item-label">🕐 ตามวันที่สร้าง</span>
+        <span id="sort-check-created" style="color:var(--accent)"></span>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-secondary" onclick="closeModal('sortOverlay')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAT EDIT MODAL -->
+<div class="overlay" id="catOverlay" onclick="closeOnOverlay(event,'catOverlay')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">จัดการหมวดหมู่</div>
+    <div id="catList" style="margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px">
+      <input class="form-input" id="newCatInput" placeholder="ชื่อหมวดหมู่ใหม่..." style="flex:1" />
+      <button class="btn btn-primary" style="flex:0;padding:12px 20px" onclick="addCategory()">เพิ่ม</button>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="closeModal('catOverlay')">เสร็จสิ้น</button>
+  </div>
+</div>
+
+<script>
+// ==================== STATE ====================
+let tasks = JSON.parse(localStorage.getItem('mytasks_tasks') || '[]');
+let categories = JSON.parse(localStorage.getItem('mytasks_cats') || '["ทั่วไป","งาน","ส่วนตัว","สุขภาพ"]');
+let sortMode = localStorage.getItem('mytasks_sort') || 'time';
+let currentTab = 'all';
+let editingId = null;
+let selectedPriority = 'med';
+let selectedRepeat = 'none';
+let alertOn = false;
+let calYear, calMonth;
+let selectedCalDate = null;
+
+const today = new Date();
+calYear = today.getFullYear();
+calMonth = today.getMonth();
+
+function save() {
+  localStorage.setItem('mytasks_tasks', JSON.stringify(tasks));
+  localStorage.setItem('mytasks_cats', JSON.stringify(categories));
+  localStorage.setItem('mytasks_sort', sortMode);
+}
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function todayStr() {
+  return today.toISOString().slice(0,10);
+}
+
+// ==================== RENDER ====================
+function render() {
+  checkRepeatReset();
+  const el = document.getElementById('mainContent');
+  if (currentTab === 'calendar') { renderCalendar(el); return; }
+  if (currentTab === 'settings') { renderSettings(el); return; }
+
+  let filtered = [...tasks];
+
+  if (currentTab === 'today') {
+    filtered = filtered.filter(t => t.date === todayStr() || (!t.date && t.repeat === 'daily'));
+  } else if (currentTab === 'done') {
+    filtered = filtered.filter(t => t.done);
+  } else {
+    // all: show only undone tasks (done repeat tasks appear in 'done' tab until reset)
+    filtered = filtered.filter(t => !t.done);
+  }
+
+  filtered = sortTasks(filtered);
+
+  if (currentTab === 'all') {
+    // Group by categories
+    const sections = {};
+    categories.forEach(c => sections[c] = []);
+    sections['ไม่มีหมวดหมู่'] = [];
+    filtered.forEach(t => {
+      const cat = t.cat && categories.includes(t.cat) ? t.cat : 'ไม่มีหมวดหมู่';
+      sections[cat].push(t);
+    });
+
+    let html = `<div class="actions-row">
+      <div class="action-btn" onclick="openCatModal()">✏️ จัดการหมวดหมู่</div>
+      <div class="action-btn danger" onclick="deleteDone()">🗑 ลบที่เสร็จแล้ว</div>
+      <div class="action-btn danger" onclick="clearAll()">⚠️ ล้างทั้งหมด</div>
+    </div>`;
+
+    let hasAny = false;
+    Object.entries(sections).forEach(([cat, list]) => {
+      if (!list.length) return;
+      hasAny = true;
+      const undone = list.filter(t => !t.done).length;
+      html += `<div class="section-header">
+        <div class="section-title section-editable">
+          <div class="dot" style="background:var(--accent)"></div>${cat}
+        </div>
+        <div class="section-count">${undone}/${list.length}</div>
+      </div>`;
+      list.forEach(t => { html += taskCardHTML(t); });
+    });
+    if (!hasAny) html += `<div class="empty-state"><div class="empty-icon">📋</div>ยังไม่มีงาน<br>กด + เพื่อเพิ่มงานแรก!</div>`;
+    el.innerHTML = html;
+  } else if (currentTab === 'today') {
+    let html = `<div class="section-header">
+      <div class="section-title"><div class="dot" style="background:var(--yellow)"></div>วันนี้</div>
+      <div class="section-count">${filtered.filter(t=>!t.done).length} งาน</div>
+    </div>`;
+    if (!filtered.length) html += `<div class="empty-state"><div class="empty-icon">☀️</div>ไม่มีงานวันนี้<br>สบายใจได้!</div>`;
+    filtered.forEach(t => { html += taskCardHTML(t); });
+    el.innerHTML = html;
+  } else if (currentTab === 'done') {
+    let html = `<div class="actions-row">
+      <div class="action-btn danger" onclick="deleteDone()">🗑 ลบทั้งหมดที่เสร็จ</div>
+    </div>`;
+    if (!filtered.length) html += `<div class="empty-state"><div class="empty-icon">✅</div>ยังไม่มีงานที่เสร็จแล้ว</div>`;
+    filtered.forEach(t => { html += taskCardHTML(t); });
+    el.innerHTML = html;
+  }
+}
+
+function taskCardHTML(t) {
+  const priorityClass = `priority-${t.priority || 'med'}`;
+  const doneClass = t.done ? 'done' : '';
+  const checkClass = t.done ? 'checked' : '';
+  const subCount = t.subtasks ? t.subtasks.length : 0;
+  const subDone = t.subtasks ? t.subtasks.filter(s=>s.done).length : 0;
+
+  let tags = '';
+  if (t.time) tags += `<span class="meta-tag tag-time">⏰ ${t.time}</span>`;
+  if (t.repeat && t.repeat !== 'none') {
+    const rLabel = {daily:'ทุกวัน',weekly:'ทุกสัปดาห์',monthly:'ทุกเดือน',custom:`ทุก ${t.customDays} วัน`}[t.repeat] || t.repeat;
+    tags += `<span class="meta-tag tag-repeat">🔁 ${rLabel}</span>`;
+  }
+  const pLabel = {high:'สูง',med:'กลาง',low:'ต่ำ'}[t.priority||'med'];
+  tags += `<span class="meta-tag tag-priority-${t.priority||'med'}">${pLabel}</span>`;
+  if (subCount) tags += `<span class="meta-tag tag-subtask">📌 ${subDone}/${subCount}</span>`;
+  if (t.alert) tags += `<span class="meta-tag tag-alert">🔔</span>`;
+
+  return `<div class="task-card ${priorityClass} ${doneClass}" onclick="openDetail('${t.id}')">
+    <div class="task-row">
+      <div class="task-check ${checkClass}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
+      <div class="task-body">
+        <div class="task-title">${t.title}</div>
+        ${t.desc ? `<div class="task-desc">${t.desc}</div>` : ''}
+        ${tags ? `<div class="task-meta">${tags}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function sortTasks(arr) {
+  const pOrder = {high:0, med:1, low:2};
+  return [...arr].sort((a,b) => {
+    if (sortMode === 'priority') return (pOrder[a.priority||'med']||1) - (pOrder[b.priority||'med']||1);
+    if (sortMode === 'name') return a.title.localeCompare(b.title, 'th');
+    if (sortMode === 'time') {
+      const at = (a.date||'9999') + (a.time||'99:99');
+      const bt = (b.date||'9999') + (b.time||'99:99');
+      return at.localeCompare(bt);
+    }
+    return b.id.localeCompare(a.id); // created
+  });
+}
+
+// ==================== CALENDAR ====================
+function renderCalendar(el) {
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  // Build set of dates that have tasks
+  const taskDates = new Set(tasks.filter(t=>t.date).map(t=>t.date));
+  // Also include daily repeat
+  const hasDailyRepeat = tasks.some(t=>t.repeat==='daily');
+
+  let html = `<div class="cal-header">
+    <div class="cal-nav" onclick="calPrev()">‹</div>
+    <div class="cal-month-title">${monthNames[calMonth]} ${calYear + 543}</div>
+    <div class="cal-nav" onclick="calNext()">›</div>
+  </div>
+  <div class="cal-grid">
+    <div class="cal-day-name">อา</div><div class="cal-day-name">จ</div>
+    <div class="cal-day-name">อ</div><div class="cal-day-name">พ</div>
+    <div class="cal-day-name">พฤ</div><div class="cal-day-name">ศ</div>
+    <div class="cal-day-name">ส</div>`;
+
+  // Prev month padding
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+  for (let i = firstDay - 1; i >= 0; i--) {
+    html += `<div class="cal-day other-month">${prevDays - i}</div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr();
+    const hasTsk = taskDates.has(dateStr) || hasDailyRepeat;
+    const isSel = dateStr === selectedCalDate;
+    html += `<div class="cal-day ${isToday?'today':''} ${hasTsk?'has-task':''} ${isSel&&!isToday?'selected':''}" onclick="selectCalDate('${dateStr}')">${d}</div>`;
+  }
+
+  // Fill end
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  let nextD = 1;
+  for (let i = firstDay + daysInMonth; i < totalCells; i++) {
+    html += `<div class="cal-day other-month">${nextD++}</div>`;
+  }
+  html += `</div>`;
+
+  // Show tasks for selected date
+  const selDate = selectedCalDate || todayStr();
+  const dayTasks = tasks.filter(t => t.date === selDate || (!t.date && t.repeat === 'daily'));
+  const sortedDay = sortTasks(dayTasks);
+
+  const selDateObj = new Date(selDate + 'T00:00:00');
+  const displayDate = selDateObj.toLocaleDateString('th-TH', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  html += `<div class="section-header">
+    <div class="section-title"><div class="dot" style="background:var(--blue)"></div>${displayDate}</div>
+    <div class="section-count">${sortedDay.length} งาน</div>
+  </div>`;
+
+  if (!sortedDay.length) html += `<div class="empty-state" style="padding:24px"><div class="empty-icon" style="font-size:32px">📭</div>ไม่มีงานวันนี้</div>`;
+  sortedDay.forEach(t => { html += taskCardHTML(t); });
+
+  el.innerHTML = html;
+}
+
+function calPrev() {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  render();
+}
+function calNext() {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  render();
+}
+function selectCalDate(d) {
+  selectedCalDate = d;
+  render();
+}
+
+// ==================== SETTINGS ====================
+function renderSettings(el) {
+  el.innerHTML = `<div class="settings-section">
+    <div class="settings-section-title">หมวดหมู่</div>
+    <div class="settings-item" onclick="openCatModal()" style="cursor:pointer">
+      <div>
+        <div class="settings-item-label">✏️ จัดการหมวดหมู่</div>
+        <div class="settings-item-sub">${categories.join(', ')}</div>
+      </div>
+      <span style="color:var(--text3)">›</span>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-title">การเรียงลำดับ</div>
+    <div class="settings-item" onclick="showSort()" style="cursor:pointer">
+      <div>
+        <div class="settings-item-label">⇅ เรียงลำดับงาน</div>
+        <div class="settings-item-sub">ปัจจุบัน: ${{time:'ตามเวลา',priority:'ตามความสำคัญ',name:'ตามชื่อ',created:'ตามวันที่สร้าง'}[sortMode]}</div>
+      </div>
+      <span style="color:var(--text3)">›</span>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-title">ข้อมูล</div>
+    <div class="settings-item" style="cursor:pointer" onclick="deleteDone()">
+      <div class="settings-item-label" style="color:var(--red)">🗑 ลบงานที่เสร็จแล้ว</div>
+    </div>
+    <div class="settings-item" style="cursor:pointer" onclick="clearAll()">
+      <div class="settings-item-label" style="color:var(--red)">⚠️ ล้างงานทั้งหมด</div>
+    </div>
+  </div>
+  <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">MyTasks v1.0 · สร้างด้วย ♥</div>`;
+}
+
+// ==================== TASK ACTIONS ====================
+function getNextRepeatDate(t) {
+  const base = t.doneDate || todayStr();
+  const d = new Date(base + 'T00:00:00');
+  if (t.repeat === 'daily') { d.setDate(d.getDate() + 1); }
+  else if (t.repeat === 'weekly') { d.setDate(d.getDate() + 7); }
+  else if (t.repeat === 'monthly') { d.setMonth(d.getMonth() + 1); }
+  else if (t.repeat === 'custom') { d.setDate(d.getDate() + (parseInt(t.customDays) || 1)); }
+  return d.toISOString().slice(0,10);
+}
+
+function checkRepeatReset() {
+  const today = todayStr();
+  let changed = false;
+  tasks.forEach(t => {
+    if (t.done && t.repeat !== 'none' && t.nextRepeatDate && t.nextRepeatDate <= today) {
+      t.done = false;
+      t.doneDate = null;
+      t.nextRepeatDate = null;
+      changed = true;
+    }
+  });
+  if (changed) save();
+}
+
+function toggleDone(id) {
+  const t = tasks.find(t=>t.id===id);
+  if (!t) return;
+  t.done = !t.done;
+  if (t.done && t.repeat !== 'none') {
+    t.doneDate = todayStr();
+    t.nextRepeatDate = getNextRepeatDate(t);
+  } else {
+    t.doneDate = null;
+    t.nextRepeatDate = null;
+  }
+  save(); render();
+}
+
+function deleteDone() {
+  showConfirm('ลบงานที่เสร็จแล้วทั้งหมด?', () => {
+    tasks = tasks.filter(t => !t.done);
+    save(); render();
+  });
+}
+
+function clearAll() {
+  showConfirm('ล้างงานทั้งหมด?\nไม่สามารถกู้คืนได้!', () => {
+    tasks = [];
+    save(); render();
+  });
+}
+
+function showConfirm(msg, onYes) {
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmOverlay').classList.add('show');
+  document.getElementById('confirmYes').onclick = () => {
+    closeModal('confirmOverlay');
+    onYes();
+  };
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  save(); closeModal('detailOverlay'); render();
+}
+
+// ==================== ADD/EDIT MODAL ====================
+function openAddModal(prefillDate) {
+  editingId = null;
+  selectedPriority = 'med';
+  selectedRepeat = 'none';
+  alertOn = false;
+  document.getElementById('modalTitle').textContent = 'เพิ่มงานใหม่';
+  document.getElementById('taskTitle').value = '';
+  document.getElementById('taskDesc').value = '';
+  document.getElementById('taskDate').value = prefillDate || '';
+  document.getElementById('taskTime').value = '';
+  document.getElementById('subtaskList').innerHTML = '';
+  document.getElementById('alertToggle').className = 'toggle';
+  document.getElementById('customRepeatRow').style.display = 'none';
+  document.getElementById('customRepeatDays').value = '';
+  updatePriorityUI();
+  updateRepeatUI();
+  populateCatSelect();
+  document.getElementById('addOverlay').classList.add('show');
+}
+
+function openEditModal(id) {
+  const t = tasks.find(t=>t.id===id);
+  if (!t) return;
+  editingId = id;
+  selectedPriority = t.priority || 'med';
+  selectedRepeat = t.repeat || 'none';
+  alertOn = t.alert || false;
+  document.getElementById('modalTitle').textContent = 'แก้ไขงาน';
+  document.getElementById('taskTitle').value = t.title;
+  document.getElementById('taskDesc').value = t.desc || '';
+  document.getElementById('taskDate').value = t.date || '';
+  document.getElementById('taskTime').value = t.time || '';
+  document.getElementById('alertToggle').className = 'toggle' + (alertOn?' on':'');
+  document.getElementById('customRepeatRow').style.display = selectedRepeat === 'custom' ? 'block' : 'none';
+  document.getElementById('customRepeatDays').value = t.customDays || '';
+  updatePriorityUI();
+  updateRepeatUI();
+  populateCatSelect(t.cat);
+
+  // Subtasks
+  const sl = document.getElementById('subtaskList');
+  sl.innerHTML = '';
+  (t.subtasks || []).forEach(s => appendSubtaskField(s.title));
+
+  closeModal('detailOverlay');
+  document.getElementById('addOverlay').classList.add('show');
+}
+
+function populateCatSelect(selected) {
+  const sel = document.getElementById('taskCat');
+  sel.innerHTML = categories.map(c => `<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
+}
+
+function selectPriority(p) {
+  selectedPriority = p;
+  updatePriorityUI();
+}
+function updatePriorityUI() {
+  ['high','med','low'].forEach(p => {
+    const el = document.getElementById('p-'+p);
+    el.className = 'priority-opt' + (selectedPriority===p ? ` sel-${p}` : '');
+  });
+}
+
+function selectRepeat(r) {
+  selectedRepeat = r;
+  updateRepeatUI();
+  document.getElementById('customRepeatRow').style.display = r === 'custom' ? 'block' : 'none';
+}
+function updateRepeatUI() {
+  document.querySelectorAll('.repeat-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.repeat === selectedRepeat);
+  });
+}
+
+function toggleAlert() {
+  alertOn = !alertOn;
+  document.getElementById('alertToggle').className = 'toggle' + (alertOn?' on':'');
+  if (alertOn && 'Notification' in window) {
+    Notification.requestPermission();
+  }
+}
+
+function addSubtaskField() { appendSubtaskField(''); }
+function appendSubtaskField(val) {
+  const sl = document.getElementById('subtaskList');
+  const div = document.createElement('div');
+  div.className = 'subtask-item';
+  div.innerHTML = `<input type="text" placeholder="งานย่อย..." value="${val}" />
+    <span class="subtask-del" onclick="this.parentElement.remove()">✕</span>`;
+  sl.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  if (!title) { document.getElementById('taskTitle').focus(); return; }
+
+  const subtasks = [...document.querySelectorAll('#subtaskList .subtask-item input')]
+    .map(i => i.value.trim()).filter(Boolean).map(t => ({id:genId(), title:t, done:false}));
+
+  const taskData = {
+    title,
+    desc: document.getElementById('taskDesc').value.trim(),
+    date: document.getElementById('taskDate').value,
+    time: document.getElementById('taskTime').value,
+    priority: selectedPriority,
+    repeat: selectedRepeat,
+    customDays: document.getElementById('customRepeatDays').value || null,
+    cat: document.getElementById('taskCat').value,
+    alert: alertOn,
+    subtasks,
+    done: false,
+  };
+
+  if (editingId) {
+    const idx = tasks.findIndex(t=>t.id===editingId);
+    tasks[idx] = { ...tasks[idx], ...taskData };
+  } else {
+    tasks.push({ id: genId(), createdAt: Date.now(), ...taskData });
+  }
+
+  // Schedule notification if needed
+  if (alertOn && taskData.date && taskData.time) {
+    scheduleNotif(taskData);
+  }
+
+  save(); closeModal('addOverlay'); render();
+}
+
+function scheduleNotif(t) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const dt = new Date(`${t.date}T${t.time}:00`);
+  const diff = dt - Date.now();
+  if (diff > 0) {
+    setTimeout(() => {
+      new Notification('MyTasks 🔔', { body: t.title, icon: '' });
+    }, diff);
+  }
+}
+
+// ==================== DETAIL MODAL ====================
+function openDetail(id) {
+  const t = tasks.find(t=>t.id===id);
+  if (!t) return;
+  const pColors = {high:'var(--red)',med:'var(--yellow)',low:'var(--green)'};
+  const pLabel = {high:'สูง',med:'กลาง',low:'ต่ำ'}[t.priority||'med'];
+  const rLabel = {none:'ไม่ซ้ำ',daily:'ทุกวัน',weekly:'ทุกสัปดาห์',monthly:'ทุกเดือน',custom:`ทุก ${t.customDays} วัน`}[t.repeat||'none'];
+
+  let subtasksHTML = '';
+  if (t.subtasks && t.subtasks.length) {
+    subtasksHTML = `<div style="margin-top:16px">
+      <div class="form-label">งานย่อย</div>
+      ${t.subtasks.map(s => `
+        <div class="detail-subtask">
+          <div class="detail-subtask-check ${s.done?'checked':''}\"
+            onclick="toggleSubtask('${t.id}','${s.id}')"></div>
+          <span style="font-size:14px;color:${s.done?'var(--text3)':'var(--text)'};${s.done?'text-decoration:line-through':''}\">${s.title}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  document.getElementById('detailModal').innerHTML = `
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div style="flex:1">
+        <div style="font-family:'Prompt',sans-serif;font-size:19px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:8px">${t.title}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span style="background:rgba(0,0,0,0.2);color:${pColors[t.priority||'med']};padding:3px 10px;border-radius:10px;font-size:12px;font-weight:600">${pLabel}</span>
+          ${t.cat ? `<span style="background:var(--surface2);color:var(--text2);padding:3px 10px;border-radius:10px;font-size:12px">${t.cat}</span>` : ''}
+          ${t.repeat !== 'none' ? `<span style="background:rgba(124,106,247,0.15);color:var(--accent);padding:3px 10px;border-radius:10px;font-size:12px">🔁 ${rLabel}</span>` : ''}
+          ${t.alert ? `<span style="background:rgba(240,131,74,0.15);color:var(--orange);padding:3px 10px;border-radius:10px;font-size:12px">🔔 แจ้งเตือน</span>` : ''}
+        </div>
+      </div>
+    </div>
+    ${t.date || t.time ? `<div style="display:flex;gap:12px;margin-bottom:12px">
+      ${t.date ? `<div style="color:var(--text2);font-size:14px">📅 ${new Date(t.date+'T00:00:00').toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</div>` : ''}
+      ${t.time ? `<div style="color:var(--text2);font-size:14px">⏰ ${t.time}</div>` : ''}
+    </div>` : ''}
+    ${t.desc ? `<div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:4px">${t.desc}</div>` : ''}
+    ${subtasksHTML}
+    <div class="btn-row" style="margin-top:20px">
+      <button class="btn btn-secondary" onclick="deleteTask('${t.id}')">🗑 ลบ</button>
+      <button class="btn btn-secondary" onclick="openEditModal('${t.id}')">✏️ แก้ไข</button>
+      <button class="btn btn-primary" onclick="toggleDone('${t.id}');closeModal('detailOverlay');render()">${t.done ? '↩ ยกเลิก' : '✓ เสร็จ'}</button>
+    </div>`;
+
+  document.getElementById('detailOverlay').classList.add('show');
+}
+
+function toggleSubtask(taskId, subId) {
+  const t = tasks.find(t=>t.id===taskId);
+  if (!t || !t.subtasks) return;
+  const s = t.subtasks.find(s=>s.id===subId);
+  if (s) s.done = !s.done;
+  save(); openDetail(taskId);
+}
+
+// ==================== CATEGORY MODAL ====================
+function openCatModal() {
+  renderCatList();
+  document.getElementById('catOverlay').classList.add('show');
+}
+
+function renderCatList() {
+  document.getElementById('catList').innerHTML = categories.map(c =>
+    `<span class="cat-chip">${c} <span class="del" onclick="deleteCat('${c}')">✕</span></span>`
+  ).join('');
+}
+
+function addCategory() {
+  const v = document.getElementById('newCatInput').value.trim();
+  if (!v || categories.includes(v)) return;
+  categories.push(v);
+  document.getElementById('newCatInput').value = '';
+  save(); renderCatList();
+}
+
+function deleteCat(c) {
+  categories = categories.filter(x => x !== c);
+  save(); renderCatList();
+}
+
+// ==================== SORT ====================
+function showSort() {
+  ['time','priority','name','created'].forEach(s => {
+    document.getElementById('sort-check-'+s).textContent = sortMode === s ? '✓' : '';
+  });
+  document.getElementById('sortOverlay').classList.add('show');
+}
+
+function setSortAndClose(mode) {
+  sortMode = mode;
+  save(); closeModal('sortOverlay'); render();
+}
+
+// ==================== TAB ====================
+function showTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  render();
+}
+
+// ==================== MODALS ====================
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+function closeOnOverlay(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+// ==================== INIT ====================
+checkRepeatReset();
+render();
+
+// Reschedule notifications on load
+tasks.filter(t => t.alert && t.date && t.time).forEach(scheduleNotif);
+</script>
+</body>
+</html>
